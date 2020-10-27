@@ -1,20 +1,59 @@
-let video;
+let capture;
 let poseNet;
 let pose;
 let skeleton;
 let xToMatch = 0;
 let yToMatch = 0;
-let dotColor;
+let dotColor, defaultColor, correctColor, skeletonColor;
+const btn = document.getElementById('record'), chunks = [];
+
+function record() {
+  chunks.length = 0;
+  let stream = document.querySelector('canvas').captureStream(30),
+    recorder = new MediaRecorder(stream);
+  recorder.ondataavailable = e => {
+    if (e.data.size) {
+      chunks.push(e.data);
+    }
+  };
+  recorder.onstop = exportVideo;
+  btn.onclick = e => {
+    recorder.stop();
+    btn.textContent = 'start recording';
+    btn.onclick = record;
+  };
+  recorder.start();
+  btn.textContent = 'stop recording';
+}
+
+function exportVideo(e) {
+  var blob = new Blob(chunks);
+  var vid = document.createElement('video');
+  vid.id = 'recorded';
+  vid.width = 320;
+  vid.height = 240;
+  vid.controls = true;
+  vid.src = URL.createObjectURL(blob);
+  document.body.appendChild(vid);
+  vid.play();
+}
+btn.onclick = record;
 
 function setup() {
-  createCanvas(640, 480);
-  video = createCapture(VIDEO);
-  video.hide();
-  poseNet = ml5.poseNet(video, modelReady);
+  createCanvas(320, 240);
+  capture = createCapture(VIDEO);
+  capture.size(320, 240);
+  capture.hide();
+
+  poseNet = ml5.poseNet(capture, modelReady);
   poseNet.on('pose', gotPoses);
+
   xToMatch = width/2;
   yToMatch = height/2;
-  dotColor = color('#ff414d');
+  defaultColor = color('#ff414d');
+  correctColor = color('#28df99');
+  skeletonColor = color('#a5ecd7');
+  dotColor = defaultColor;
 }
 
 function gotPoses(poses) {
@@ -33,24 +72,22 @@ function modelReady() {
 function drawRandomPose(x,y,clr){
   noStroke();
   fill(clr);
-  ellipse(x,y,16,16);
+  ellipse(x,y,18,18);
 }
 
 function matchPose(x1,y1,x2,y2){
   let d = dist(x1,y1,x2,y2);
   if (d < 10){
-    console.log('match');
-    dotColor = color('#28df99');
+    dotColor = correctColor;
   } else {
-    console.log('no match');
-    dotColor = color('#ff414d');
+    dotColor = defaultColor;
   }
 }
 
 function draw() {
-  translate(video.width, 0);
+  translate(capture.width, 0);
   scale(-1, 1);
-  image(video, 0, 0, video.width, video.height);
+  image(capture, 0, 0, capture.width, capture.height);
 
   if (pose) {
 
@@ -58,7 +95,7 @@ function draw() {
       let x = pose.keypoints[i].position.x;
       let y = pose.keypoints[i].position.y;
       noStroke();
-      fill('#a5ecd7');
+      fill(skeletonColor);
       ellipse(x,y,16,16);
 
       if (i == 0){
@@ -70,7 +107,7 @@ function draw() {
       let a = skeleton[i][0];
       let b = skeleton[i][1];
       strokeWeight(2);
-      stroke('#a5ecd7');
+      stroke(skeletonColor);
       line(a.position.x, a.position.y, b.position.x, b.position.y);
     }
 
