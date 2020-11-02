@@ -1,13 +1,13 @@
 let capture, poseNet, pose, skeleton;
-let poseToMatch = [];
 let staticPose, tempKeypoints;
 let staticPoseColor, defaultColor, correctColor, skeletonColor;
 const recordBtn = document.getElementById('record'), chunks = [];
 
 function record() {
   chunks.length = 0;
+  var options = { mimeType: "video/webm; codecs=vp9" };
   let stream = document.querySelector('canvas').captureStream(30),
-    recorder = new MediaRecorder(stream);
+    recorder = new MediaRecorder(stream, options);
   recorder.ondataavailable = e => {
     if (e.data.size) {
       chunks.push(e.data);
@@ -24,7 +24,9 @@ function record() {
 }
 
 function exportVideo(e) {
-  var blob = new Blob(chunks);
+  var blob = new Blob(chunks, {
+    type: "video/webm"
+  });
   var vid = document.createElement('video');
   vid.id = 'recorded';
   vid.width = 500;
@@ -48,7 +50,8 @@ class StaticPose {
     line(this.keypoints[6][0], this.keypoints[6][1], this.keypoints[8][0], this.keypoints[8][1]);
     line(this.keypoints[7][0], this.keypoints[7][1], this.keypoints[9][0], this.keypoints[9][1]);
     line(this.keypoints[8][0], this.keypoints[8][1], this.keypoints[10][0], this.keypoints[10][1]);
-
+    line(this.keypoints[5][0], this.keypoints[5][1], this.keypoints[11][0], this.keypoints[11][1]);
+    line(this.keypoints[6][0], this.keypoints[6][1], this.keypoints[12][0], this.keypoints[12][1]);
     line(this.keypoints[11][0], this.keypoints[11][1], this.keypoints[12][0], this.keypoints[12][1]);
     line(this.keypoints[11][0], this.keypoints[11][1], this.keypoints[13][0], this.keypoints[13][1]);
     line(this.keypoints[12][0], this.keypoints[12][1], this.keypoints[14][0], this.keypoints[14][1]);
@@ -63,7 +66,7 @@ function matchPose(userPose, staticPose){
     let d = dist(userPose[i].position.x, userPose[i].position.y, staticPose[i][0], staticPose[i][1]);
     distances.push(d);
   }
-  let match = distances.every( e => e < 60);
+  let match = distances.every( e => e < 80);
   if (match) {
     staticPoseColor = correctColor;
   } else {
@@ -93,16 +96,16 @@ function setup() {
     [0,0],//righteye
     [0,0],//leftear
     [0,0],//rigtear
-    [320,100],//leftshoulder
-    [180,100],//rightshoulder
-    [400,170],//leftelbow
-    [100,170],//rightelbow
-    [450,250],//leftwrist
-    [50,250],//rightwrist
-    [300,230],//lefthip
-    [200,230],//righthip
-    [310,320],//leftknee
-    [190,320],//rightknee
+    [320,60],//leftshoulder
+    [180,60],//rightshoulder
+    [390,140],//leftelbow
+    [110,140],//rightelbow
+    [450,220],//leftwrist
+    [50,220],//rightwrist
+    [300,210],//lefthip
+    [200,210],//righthip
+    [310,300],//leftknee
+    [190,300],//rightknee
     [320,390],//leftankle
     [180,390],//rightankle
   ];
