@@ -1,6 +1,7 @@
 let capture, poseNet, pose, skeleton;
 let poseToMatch = [];
-let dotColor, defaultColor, correctColor, skeletonColor;
+let staticPose, tempKeypoints;
+let staticPoseColor, defaultColor, correctColor, skeletonColor;
 const recordBtn = document.getElementById('record'), chunks = [];
 
 function record() {
@@ -15,19 +16,19 @@ function record() {
   recorder.onstop = exportVideo;
   recordBtn.onclick = e => {
     recorder.stop();
-    recordBtn.textContent = 'start recording';
+    recordBtn.textContent = 'Start Recording';
     recordBtn.onclick = record;
   };
   recorder.start();
-  recordBtn.textContent = 'stop recording';
+  recordBtn.textContent = 'Stop Recording';
 }
 
 function exportVideo(e) {
   var blob = new Blob(chunks);
   var vid = document.createElement('video');
   vid.id = 'recorded';
-  vid.width = 320;
-  vid.height = 240;
+  vid.width = 500;
+  vid.height = 400;
   vid.controls = true;
   vid.src = URL.createObjectURL(blob);
   document.body.appendChild(vid);
@@ -35,10 +36,45 @@ function exportVideo(e) {
 }
 recordBtn.onclick = record;
 
+class StaticPose {
+  constructor(keypoints) {
+    this.keypoints = keypoints;
+  }
+  show() {
+    stroke(staticPoseColor);
+    strokeWeight(25);
+    line(this.keypoints[5][0], this.keypoints[5][1], this.keypoints[6][0], this.keypoints[6][1]);
+    line(this.keypoints[5][0], this.keypoints[5][1], this.keypoints[7][0], this.keypoints[7][1]);
+    line(this.keypoints[6][0], this.keypoints[6][1], this.keypoints[8][0], this.keypoints[8][1]);
+    line(this.keypoints[7][0], this.keypoints[7][1], this.keypoints[9][0], this.keypoints[9][1]);
+    line(this.keypoints[8][0], this.keypoints[8][1], this.keypoints[10][0], this.keypoints[10][1]);
+
+    line(this.keypoints[11][0], this.keypoints[11][1], this.keypoints[12][0], this.keypoints[12][1]);
+    line(this.keypoints[11][0], this.keypoints[11][1], this.keypoints[13][0], this.keypoints[13][1]);
+    line(this.keypoints[12][0], this.keypoints[12][1], this.keypoints[14][0], this.keypoints[14][1]);
+    line(this.keypoints[13][0], this.keypoints[13][1], this.keypoints[15][0], this.keypoints[15][1]);
+    line(this.keypoints[14][0], this.keypoints[14][1], this.keypoints[16][0], this.keypoints[16][1]);
+  }
+}
+
+function matchPose(userPose, staticPose){
+  let distances = [];
+  for (let i = 5; i < 17; i++) {
+    let d = dist(userPose[i].position.x, userPose[i].position.y, staticPose[i][0], staticPose[i][1]);
+    distances.push(d);
+  }
+  let match = distances.every( e => e < 60);
+  if (match) {
+    staticPoseColor = correctColor;
+  } else {
+    staticPoseColor = defaultColor;
+  }
+}
+
 function setup() {
-  createCanvas(320, 240);
+  createCanvas(500, 400);
   capture = createCapture(VIDEO);
-  capture.size(320, 240);
+  capture.size(500, 400);
   capture.hide();
 
   poseNet = ml5.poseNet(capture, modelReady);
@@ -47,14 +83,34 @@ function setup() {
   xToMatch = width/2;
   yToMatch = height/2;
   defaultColor = color(255,65,10,70);
-  correctColor = color(0,255,0,255);
-  skeletonColor = color(50,168, 145,100);
-  dotColor = defaultColor;
+  correctColor = color(0,255,0,200);
+  skeletonColor = color(50,168, 145,70);
+  staticPoseColor = defaultColor;
+
+  tempKeypoints = [
+    [0,0],//nose
+    [0,0],//lefteye
+    [0,0],//righteye
+    [0,0],//leftear
+    [0,0],//rigtear
+    [320,100],//leftshoulder
+    [180,100],//rightshoulder
+    [400,170],//leftelbow
+    [100,170],//rightelbow
+    [450,250],//leftwrist
+    [50,250],//rightwrist
+    [300,230],//lefthip
+    [200,230],//righthip
+    [310,320],//leftknee
+    [190,320],//rightknee
+    [320,390],//leftankle
+    [180,390],//rightankle
+  ];
+  staticPose = new StaticPose(tempKeypoints);
 }
 
 function gotPoses(poses) {
-  console.log(poses);
-
+  // console.log(poses);
   if (poses.length > 0){
     pose = poses[0].pose;
     skeleton = poses[0].skeleton;
@@ -65,68 +121,19 @@ function modelReady() {
   console.log('poseNet model ready');
 }
 
-function drawRandomPose(colr){
-  poseToMatch = [
-    [0,0],//nose
-    [0,0],//lefteye
-    [0,0],//righteye
-    [0,0],//leftear
-    [0,0],//rigtear
-    [244,170],//leftshoulder
-    [80,170],//rightshoulder
-    [0,0],//leftelbow
-    [0,0],//rightelbow
-    [0,0],//leftwrist
-    [0,0],//rightwrist
-    [0,0],//lefthip
-    [0,0],//righthip
-    [0,0],//leftknee
-    [0,0],//rightknee
-    [0,0],//leftankle
-    [0,0],//rightankle
-  ];
-  for (let i=0; i<poseToMatch.length; i++) {
-    noStroke();
-    fill(colr);
-    ellipse(poseToMatch[i][0],poseToMatch[i][1],15,15);
-  }
-
-  strokeWeight(20);
-  stroke(colr);
-  line(poseToMatch[5][0], poseToMatch[5][1],poseToMatch[6][0],poseToMatch[6][1]);
-
-}
-
-function matchPose(x1,y1,x2,y2){
-  let d = dist(x1,y1,x2,y2);
-  if (d < 20){
-    dotColor = correctColor;
-    console.log('match');
-  } else {
-    dotColor = defaultColor;
-    console.log('no match');
-  }
-}
-
 function draw() {
   translate(capture.width, 0);
   scale(-1, 1);
   image(capture, 0, 0, capture.width, capture.height);
 
   if (pose) {
-
     for(let i = 0; i < pose.keypoints.length; i++) {
       let x = pose.keypoints[i].position.x;
       let y = pose.keypoints[i].position.y;
       noStroke();
       fill(skeletonColor);
       ellipse(x,y,15,15);
-
-      if (i==5 || i==6) {
-        matchPose(x,y,poseToMatch[i][0],poseToMatch[i][1]);
-      }
     }
-
     for (let i = 0; i < skeleton.length; i++){
       let a = skeleton[i][0];
       let b = skeleton[i][1];
@@ -134,7 +141,7 @@ function draw() {
       stroke(skeletonColor);
       line(a.position.x, a.position.y, b.position.x, b.position.y);
     }
-
+    matchPose(pose.keypoints, staticPose.keypoints);
   }
-  drawRandomPose(dotColor);
+  staticPose.show();
 }
