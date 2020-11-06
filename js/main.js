@@ -45,18 +45,9 @@ class StaticPose {
   show() {
     stroke(staticPoseColor);
     strokeWeight(25);
-    line(this.keypoints[5][0], this.keypoints[5][1], this.keypoints[6][0], this.keypoints[6][1]);
-    line(this.keypoints[5][0], this.keypoints[5][1], this.keypoints[7][0], this.keypoints[7][1]);
-    line(this.keypoints[6][0], this.keypoints[6][1], this.keypoints[8][0], this.keypoints[8][1]);
-    line(this.keypoints[7][0], this.keypoints[7][1], this.keypoints[9][0], this.keypoints[9][1]);
-    line(this.keypoints[8][0], this.keypoints[8][1], this.keypoints[10][0], this.keypoints[10][1]);
-    line(this.keypoints[5][0], this.keypoints[5][1], this.keypoints[11][0], this.keypoints[11][1]);
-    line(this.keypoints[6][0], this.keypoints[6][1], this.keypoints[12][0], this.keypoints[12][1]);
-    line(this.keypoints[11][0], this.keypoints[11][1], this.keypoints[12][0], this.keypoints[12][1]);
-    line(this.keypoints[11][0], this.keypoints[11][1], this.keypoints[13][0], this.keypoints[13][1]);
-    line(this.keypoints[12][0], this.keypoints[12][1], this.keypoints[14][0], this.keypoints[14][1]);
-    line(this.keypoints[13][0], this.keypoints[13][1], this.keypoints[15][0], this.keypoints[15][1]);
-    line(this.keypoints[14][0], this.keypoints[14][1], this.keypoints[16][0], this.keypoints[16][1]);
+    var indexArray = [[5,6],[5,7],[5,11],[6,8],[6,12],[7,9],[8,10],[11,12],[11,13],[12,14],[13,15],[14,16]];
+    indexArray.forEach(index =>
+      line(this.keypoints[index[0]][0], this.keypoints[index[0]][1], this.keypoints[index[1]][0], this.keypoints[index[1]][1]));
   }
 }
 
